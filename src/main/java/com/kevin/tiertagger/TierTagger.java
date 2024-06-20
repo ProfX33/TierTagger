@@ -2,6 +2,7 @@ package com.kevin.tiertagger;
 
 import com.kevin.tiertagger.config.TierTaggerConfig;
 import com.kevin.tiertagger.model.PlayerInfo;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -31,9 +32,14 @@ public class TierTagger implements ModInitializer {
     @Override
     public void onInitialize() {
         ClientCommandRegistrationCallback.EVENT.register((dispatcher, registry) -> dispatcher.register(
-                literal("tiertagger")
+                literal("tt")
                         .then(argument("player", PlayerArgumentType.player())
                                 .executes(TierTagger::displayTierInfo))));
+
+        ClientCommandRegistrationCallback.EVENT.register((dispatcher, registry) -> dispatcher.register(
+                literal("ttdebug")
+                        .then(literal("display_tier_colors")
+                                .executes(TierTagger::displayAllTierColors))));
     }
 
     public static Text appendTier(PlayerEntity player, Text text) {
@@ -101,6 +107,21 @@ public class TierTagger implements ModInitializer {
         return 0;
     }
 
+    private static int displayAllTierColors(CommandContext<FabricClientCommandSource> ctx) {
+        System.out.println("display all tier colors");
+        MutableText text = Text.empty().append("Tier Colors:");
+        
+        String[] tiers = {"LT5", "HT5", "LT4", "HT4", "LT3", "HT3", "LT2", "HT2", "LT1", "HT1", "RLT2", "RHT2", "RLT1", "RHT1"};
+        for (String tier: tiers) {
+            text.append(Text.literal("\n"));
+            text.append(Text.literal(tier).styled(s -> s.withColor(getTierColor(tier))));
+        }
+
+        ctx.getSource().sendFeedback(text);
+
+        return 0;
+    }
+
     private static Text printPlayerInfo(PlayerInfo info) {
         MutableText text = Text.empty().append("=== Rankings for " + info.name() + " ===");
 
@@ -117,21 +138,35 @@ public class TierTagger implements ModInitializer {
     }
 
     private static int getTierColor(String tier) {
-        if (tier.startsWith("R")) {
-            return 0x662B99; // ourple
-        }
 
         return switch (tier) {
-            case "HT1" -> 0xFF0000; // red
-            case "LT1" -> 0xFFB6C1; // light pink
-            case "HT2" -> 0xFFA500; // orange
-            case "LT2" -> 0xFFE4B5; // light orange
-            case "HT3" -> 0xDAA520; // goldenrod
-            case "LT3" -> 0xEEE8AA; // pale goldenrod
-            case "HT4" -> 0x006400; // dark green
-            case "LT4" -> 0x90EE90; // light green
-            case "HT5" -> 0x808080; // grey
-            case "LT5" -> 0xD3D3D3; // pale grey
+
+            case "HT1" -> 0xFF4500;
+            case "LT1" -> 0xFF6347;
+            case "HT2" -> 0xFF7F50;
+            case "LT2" -> 0xFFA500;
+            case "HT3" -> 0xDAA520;
+            case "LT3" -> 0x808000;
+            case "HT4" -> 0x228B22;
+            case "LT4" -> 0x2E8B57;
+            case "HT5" -> 0x008080;
+            case "LT5" -> 0x708090;
+
+            /*case "HT1" -> 0xff2e00;
+            case "LT1" -> 0xf8032c;
+            case "HT2" -> 0xf1057f;
+            case "LT2" -> 0xb40ae3;
+            case "HT3" -> 0x1043cf;
+            case "LT3" -> 0x14bcc2;
+            case "HT4" -> 0x1ba657;
+            case "LT4" -> 0x348d20;
+            case "HT5" -> 0x647524;
+            case "LT5" -> 0x5f4825;*/
+
+            case "RLT2" -> 0x4c008a;
+            case "RHT2" -> 0x7e008a;
+            case "RLT1" -> 0x8a0064;
+            case "RHT1" -> 0x8a0032;
             default -> 0xD3D3D3; // DEFAULT: pale grey
         };
     }
