@@ -2,7 +2,6 @@ package com.kevin.tiertagger;
 
 import com.kevin.tiertagger.config.TierTaggerConfig;
 import com.kevin.tiertagger.model.PlayerInfo;
-import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -94,12 +93,12 @@ public class TierTagger implements ModInitializer {
         if (info.isPresent()) {
             ctx.getSource().sendFeedback(printPlayerInfo(info.get()));
         } else {
-            ctx.getSource().sendFeedback(Text.of("[TierTagger] Searching..."));
+            ctx.getSource().sendFeedback(Text.literal("[TierTagger] Searching...").withColor(0xb4e4f0));
             TierCache.searchPlayer(selector.name())
                     .thenAccept(p -> ctx.getSource().sendFeedback(printPlayerInfo(p)))
                     .exceptionally(t -> {
-                        ctx.getSource().sendError(Text.of("Could not find player " + selector.name()));
-                        log.error("MIGUEL", t);
+                        ctx.getSource().sendError(Text.of("[TierTagger] Could not find player " + selector.name()));
+                        log.error("Error getting player Info", t);
                         return null;
                     });
         }
@@ -123,7 +122,10 @@ public class TierTagger implements ModInitializer {
     }
 
     private static Text printPlayerInfo(PlayerInfo info) {
-        MutableText text = Text.empty().append("=== Rankings for " + info.name() + " ===");
+        MutableText text = Text.empty().append(Text.literal("[TierTagger] Tierlist Info for " + info.name()).withColor(0x65a7e0));
+
+        text.append(Text.literal("\nRegion: ").styled(s -> s.withColor(0xb4e4f0)));
+        text.append(Text.literal(info.region()).withColor(getRegionColor(info.region())));
 
         info.rankings().forEach((m, r) -> {
             String tier = getTierText(r);
@@ -135,6 +137,21 @@ public class TierTagger implements ModInitializer {
         });
 
         return text;
+    }
+
+    private static int getRegionColor(String region) {
+
+        return switch (region) {
+            case "EU" -> 0x6aff6e;
+            case "NA" -> 0xff6a6e;
+            case "AS" -> 0xc27ba0;
+            case "ME" -> 0xffd966;
+            case "AF" -> 0x674ea7;
+            case "AU" -> 0xf6b26b;
+            case "SA" -> 0xff9900;
+            default -> 0xD3D3D3;
+        };
+
     }
 
     private static int getTierColor(String tier) {
@@ -151,17 +168,6 @@ public class TierTagger implements ModInitializer {
             case "LT4" -> 0x2E8B57;
             case "HT5" -> 0x008080;
             case "LT5" -> 0x708090;
-
-            /*case "HT1" -> 0xff2e00;
-            case "LT1" -> 0xf8032c;
-            case "HT2" -> 0xf1057f;
-            case "LT2" -> 0xb40ae3;
-            case "HT3" -> 0x1043cf;
-            case "LT3" -> 0x14bcc2;
-            case "HT4" -> 0x1ba657;
-            case "LT4" -> 0x348d20;
-            case "HT5" -> 0x647524;
-            case "LT5" -> 0x5f4825;*/
 
             case "RLT2" -> 0x4c008a;
             case "RHT2" -> 0x7e008a;
