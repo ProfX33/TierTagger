@@ -30,15 +30,34 @@ public class TierTagger implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        ClientCommandRegistrationCallback.EVENT.register((dispatcher, registry) -> dispatcher.register(
-                literal("tt")
-                        .then(argument("player", PlayerArgumentType.player())
-                                .executes(TierTagger::displayTierInfo))));
+        ClientCommandRegistrationCallback.EVENT.register((dispatcher, registry) -> {
+            dispatcher.register(
+                    literal("tt")
+                            .then(argument("player", PlayerArgumentType.player())
+                                    .executes(TierTagger::displayTierInfo))
+            );
 
-        ClientCommandRegistrationCallback.EVENT.register((dispatcher, registry) -> dispatcher.register(
-                literal("ttdebug")
-                        .then(literal("display_tier_colors")
-                                .executes(TierTagger::displayAllTierColors))));
+            dispatcher.register(
+                    literal("tiertagger")
+                            .then(argument("player", PlayerArgumentType.player())
+                                    .executes(TierTagger::displayTierInfo))
+            );
+
+            dispatcher.register(
+                    literal("ttdebug")
+                            .then(literal("display_tier_colors")
+                                    .executes(TierTagger::displayAllTierColors))
+                            .then(literal("full_player_info")
+                                    .then(argument("player", PlayerArgumentType.player())
+                                            .executes(TierTagger::displayFullPlayerInfo)))
+            );
+
+        });
+
+
+
+
+
     }
 
     public static Text appendTier(PlayerEntity player, Text text) {
@@ -106,6 +125,31 @@ public class TierTagger implements ModInitializer {
         return 0;
     }
 
+    private static int displayFullPlayerInfo(CommandContext<FabricClientCommandSource> ctx) {
+        PlayerArgumentType.PlayerSelector selector = ctx.getArgument("player", PlayerArgumentType.PlayerSelector.class);
+
+        Optional<PlayerInfo> info = ctx.getSource().getWorld().getPlayers().stream()
+                .filter(p -> p.getNameForScoreboard().equalsIgnoreCase(selector.name()) || p.getUuidAsString().equalsIgnoreCase(selector.name()))
+                .findFirst()
+                .map(Entity::getUuid)
+                .flatMap(TierCache::getPlayerInfo);
+
+        if (info.isPresent()) {
+            ctx.getSource().sendFeedback(printFullPlayerInfo(info.get()));
+        } else {
+            ctx.getSource().sendFeedback(Text.literal("[TierTagger] Searching...").withColor(0xb4e4f0));
+            TierCache.searchPlayer(selector.name())
+                    .thenAccept(p -> ctx.getSource().sendFeedback(printFullPlayerInfo(p)))
+                    .exceptionally(t -> {
+                        ctx.getSource().sendError(Text.of("[TierTagger] Could not find player " + selector.name()));
+                        log.error("Error getting player Info", t);
+                        return null;
+                    });
+        }
+
+        return 0;
+    }
+
     private static int displayAllTierColors(CommandContext<FabricClientCommandSource> ctx) {
         System.out.println("display all tier colors");
         MutableText text = Text.empty().append("Tier Colors:");
@@ -126,6 +170,32 @@ public class TierTagger implements ModInitializer {
 
         text.append(Text.literal("\nRegion: ").styled(s -> s.withColor(0xb4e4f0)));
         text.append(Text.literal(info.region()).withColor(getRegionColor(info.region())));
+
+        info.rankings().forEach((m, r) -> {
+            String tier = getTierText(r);
+
+            if (tier != null) {
+                Text tierText = Text.literal(tier).styled(s -> s.withColor(getTierColor(tier)));
+                text.append(Text.literal("\n" + m + ": ").append(tierText));
+            }
+        });
+
+        return text;
+    }
+
+    private static Text printFullPlayerInfo(PlayerInfo info) {
+        MutableText text = Text.empty().append(Text.literal("[TierTagger] Tierlist Info for " + info.name()).withColor(0x65a7e0));
+        text.append(Text.literal("\nRegion: ").withColor(0xb4e4f0));
+        text.append(Text.literal(info.region()).withColor(getRegionColor(info.region())));
+
+        text.append(Text.literal("\nPoints: ").withColor(0xb4e4f0));
+        text.append(Text.literal(String.valueOf(info.points())).withColor(0x1c7ad9));
+        text.append(Text.literal( " [" + info.getPointInfo().getTitle() + "]").withColor(0xb4e4f0));
+        text.append(Text.literal("\nOverall: ").withColor(0xb4e4f0));
+        text.append(Text.literal(String.valueOf(info.overall())).withColor(0xb4e4f0));
+
+
+        text.append(Text.literal("\nRankings: ").withColor(0xb4e4f0));
 
         info.rankings().forEach((m, r) -> {
             String tier = getTierText(r);

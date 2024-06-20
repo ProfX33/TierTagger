@@ -14,11 +14,9 @@ import java.net.http.HttpResponse;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
-public record PlayerInfo(String uuid, String name, Map<String, Ranking> rankings, String region, int points,
-                         int overall, List<Badge> badges) {
+public record PlayerInfo(String uuid, String name, Map<String, Ranking> rankings, String region, int points, int overall, List<Badge> badges) {
     public record Ranking(int tier, int pos, @Nullable @SerializedName("peak_tier") Integer peakTier,
-                          @Nullable @SerializedName("peak_pos") Integer peakPos, long attained,
-                          boolean retired) {
+                          @Nullable @SerializedName("peak_pos") Integer peakPos, long attained, boolean retired) {
     }
 
     public record NamedRanking(String name, Ranking ranking) {

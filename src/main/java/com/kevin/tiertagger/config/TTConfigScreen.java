@@ -25,6 +25,7 @@ public class TTConfigScreen extends AbstractConfigScreen<TierTaggerConfig> {
                 CyclingOption.ofTranslatableEnum("tiertagger.config.statistic", Statistic.class, config.getShownStatistic(), config::setShownStatistic),
                 new SimpleButton("tiertagger.clear", b -> TierCache.clearCache()),
                 new ScreenOpenButton("tiertagger.config.search", PlayerSearchScreen::new)
+
         };
     }
 }

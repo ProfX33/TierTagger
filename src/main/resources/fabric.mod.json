@@ -3,7 +3,7 @@
   "id": "tier-tagger",
   "version": "${version}",
   "name": "TierTagger",
-  "description": "A gorgeous mod which displays everyone's tier from the Vanilla Pvp Tierlist in game",
+  "description": "A fabric mod which displays player's tiers MCTiers Tierlist in game",
   "authors": ["netiyiy", "uku"],
   "contact": {},
   "license": "MIT",
