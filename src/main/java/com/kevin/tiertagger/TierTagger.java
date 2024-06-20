@@ -184,7 +184,7 @@ public class TierTagger implements ModInitializer {
     }
 
     private static Text printFullPlayerInfo(PlayerInfo info) {
-        MutableText text = Text.empty().append(Text.literal("[TierTagger] Tierlist Info for " + info.name()).withColor(0x65a7e0));
+        MutableText text = Text.empty().append(Text.literal("[TierTagger] Full Tierlist Info for " + info.name()).withColor(0x65a7e0));
         text.append(Text.literal("\nRegion: ").withColor(0xb4e4f0));
         text.append(Text.literal(info.region()).withColor(getRegionColor(info.region())));
 
@@ -192,7 +192,7 @@ public class TierTagger implements ModInitializer {
         text.append(Text.literal(String.valueOf(info.points())).withColor(0x1c7ad9));
         text.append(Text.literal( " [" + info.getPointInfo().getTitle() + "]").withColor(0xb4e4f0));
         text.append(Text.literal("\nOverall: ").withColor(0xb4e4f0));
-        text.append(Text.literal(String.valueOf(info.overall())).withColor(0xb4e4f0));
+        text.append(Text.literal(String.valueOf(info.overall())).withColor(0x1c7ad9));
 
 
         text.append(Text.literal("\nRankings: ").withColor(0xb4e4f0));
