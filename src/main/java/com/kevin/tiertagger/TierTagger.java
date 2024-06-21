@@ -53,27 +53,48 @@ public class TierTagger implements ModInitializer {
             );
 
         });
-
-
-
-
-
     }
 
-    public static Text appendTier(PlayerEntity player, Text text) {
-        MutableText following = switch (manager.getConfig().getShownStatistic()) {
+    public static Text appendTierInfo(PlayerEntity player, Text text) {
+        MutableText prefix = null;
+
+        if (manager.getConfig().isShowRegion()) {
+            MutableText playerRegionText = getPlayerRegion(player.getUuid());
+            if (playerRegionText != null) {
+                prefix = Text.literal("[").formatted(Formatting.GRAY);
+                prefix.append(playerRegionText);
+                prefix.append(Text.literal("] ").formatted(Formatting.GRAY));
+            }
+        }
+
+        MutableText tierOrRankText = switch (manager.getConfig().getShownStatistic()) {
             case TIER -> getPlayerTier(player.getUuid());
             case RANK -> TierCache.getPlayerInfo(player.getUuid())
                     .map(i -> Text.literal("#" + i.overall()))
                     .orElse(null);
         };
 
-        if (following != null) {
-            following.append(Text.literal(" | ").formatted(Formatting.GRAY));
-            return following.append(text);
+        if (tierOrRankText != null) {
+            if (prefix == null) {
+                prefix = Text.literal("");
+            }
+            prefix.append(tierOrRankText);
+            prefix.append(Text.literal(" | ").formatted(Formatting.GRAY));
+        }
+
+        if (prefix != null) {
+            return Text.literal("").append(prefix).append(text);
         }
 
         return text;
+    }
+
+    @Nullable
+    private static MutableText getPlayerRegion(UUID uuid) {
+        return TierCache.getPlayerInfo(uuid)
+                .map(PlayerInfo::region)
+                .map(t -> Text.literal(t).withColor(getRegionColor(t)))
+                .orElse(null);
     }
 
     @Nullable
@@ -185,15 +206,17 @@ public class TierTagger implements ModInitializer {
 
     private static Text printFullPlayerInfo(PlayerInfo info) {
         MutableText text = Text.empty().append(Text.literal("[TierTagger] Full Tierlist Info for " + info.name()).withColor(0x65a7e0));
+
         text.append(Text.literal("\nRegion: ").withColor(0xb4e4f0));
         text.append(Text.literal(info.region()).withColor(getRegionColor(info.region())));
 
         text.append(Text.literal("\nPoints: ").withColor(0xb4e4f0));
         text.append(Text.literal(String.valueOf(info.points())).withColor(0x1c7ad9));
+
         text.append(Text.literal( " [" + info.getPointInfo().getTitle() + "]").withColor(0xb4e4f0));
+
         text.append(Text.literal("\nOverall: ").withColor(0xb4e4f0));
         text.append(Text.literal(String.valueOf(info.overall())).withColor(0x1c7ad9));
-
 
         text.append(Text.literal("\nRankings: ").withColor(0xb4e4f0));
 

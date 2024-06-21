@@ -15,6 +15,7 @@ public class TierTaggerConfig implements Serializable {
     private String apiUrl = "https://mctiers.com/api";
     private boolean enabled = true;
     private GameMode gameMode = GameMode.VANILLA;
+    private boolean showRegion = false;
     private boolean showUnranked = false;
     private boolean showRetired = true;
     private Statistic shownStatistic = Statistic.TIER;

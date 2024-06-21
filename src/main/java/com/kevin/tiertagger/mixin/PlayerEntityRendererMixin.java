@@ -21,7 +21,7 @@ public class PlayerEntityRendererMixin {
 
         PlayerEntity entity = args.get(0);
         Text text = args.get(1);
-        text = TierTagger.appendTier(entity, text);
+        text = TierTagger.appendTierInfo(entity, text);
         args.set(1, text);
     }
 }
