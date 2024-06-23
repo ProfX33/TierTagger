@@ -8,6 +8,13 @@ import lombok.extern.slf4j.Slf4j;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.toast.SystemToast;
+import net.minecraft.client.toast.ToastManager;
+import net.minecraft.client.util.InputUtil;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.text.MutableText;
@@ -16,6 +23,7 @@ import net.minecraft.util.Formatting;
 import net.uku3lig.ukulib.config.ConfigManager;
 import net.uku3lig.ukulib.utils.PlayerArgumentType;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -27,10 +35,13 @@ import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.lit
 public class TierTagger implements ModInitializer {
     @Getter
     private static final ConfigManager<TierTaggerConfig> manager = ConfigManager.createDefault(TierTaggerConfig.class, "tiertagger");
+    @Getter
+    private static final KeyBinding cycleGamemodeKey = new KeyBinding("key.tiertagger.cyclegamemode", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_F9, "category.tiertagger");
 
     @Override
     public void onInitialize() {
         ClientCommandRegistrationCallback.EVENT.register((dispatcher, registry) -> {
+
             dispatcher.register(
                     literal("tt")
                             .then(argument("player", PlayerArgumentType.player())
@@ -53,6 +64,21 @@ public class TierTagger implements ModInitializer {
             );
 
         });
+
+        KeyBindingHelper.registerKeyBinding(cycleGamemodeKey);
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            while (cycleGamemodeKey.wasPressed()) {
+                cycleGamemode();
+            }
+        });
+
+    }
+
+    public static void cycleGamemode() {
+        manager.getConfig().setGameMode(manager.getConfig().getGameMode().next());
+
+        ToastManager toastManager = MinecraftClient.getInstance().getToastManager();
+        SystemToast.show(toastManager, SystemToast.Type.PERIODIC_NOTIFICATION, Text.of("Switched Gamemode"), Text.of(manager.getConfig().getGameMode().toString()));
     }
 
     public static Text appendTierInfo(PlayerEntity player, Text text) {
@@ -99,6 +125,7 @@ public class TierTagger implements ModInitializer {
 
     @Nullable
     private static MutableText getPlayerTier(UUID uuid) {
+
         String mode = manager.getConfig().getGameMode().getApiKey();
 
         return TierCache.getPlayerInfo(uuid)
@@ -251,21 +278,42 @@ public class TierTagger implements ModInitializer {
 
         return switch (tier) {
 
-            case "HT1" -> 0xFF4500;
-            case "LT1" -> 0xFF6347;
-            case "HT2" -> 0xFF7F50;
-            case "LT2" -> 0xFFA500;
-            case "HT3" -> 0xDAA520;
-            case "LT3" -> 0x808000;
-            case "HT4" -> 0x228B22;
-            case "LT4" -> 0x2E8B57;
-            case "HT5" -> 0x008080;
-            case "LT5" -> 0x708090;
+            //Alternating Tier Colors
+            case "HT1" -> 0xCC0000;
+            case "LT1" -> 0xFF4B4B;
+            case "HT2" -> 0x0FB5C7;
+            case "LT2" -> 0xA3F6FF;
+            case "HT3" -> 0xFFBD47;
+            case "LT3" -> 0xFFE197;
+            case "HT4" -> 0x6AA343;
+            case "LT4" -> 0xA9D08E;
+            case "HT5" -> 0x595959;
+            case "LT5" -> 0x868282;
 
-            case "RLT2" -> 0x4c008a;
-            case "RHT2" -> 0x7e008a;
-            case "RLT1" -> 0x8a0064;
-            case "RHT1" -> 0x8a0032;
+            case "RHT1" -> 0x893B8B;
+            case "RLT1" -> 0xAE55B7;
+            case "RHT2" -> 0x4C3AB8;
+            case "RLT2" -> 0x6E5FDB;
+
+            /*
+            //Gradient Tier Colors
+            case "HT1" -> 0xB0004B;
+            case "LT1" -> 0xED0155;
+            case "HT2" -> 0xFF513F;
+            case "LT2" -> 0xFEA16E;
+            case "HT3" -> 0xFFEEC5;
+            case "LT3" -> 0xB3F8FF;
+            case "HT4" -> 0x43D2E1;
+            case "LT4" -> 0x35937D;
+            case "HT5" -> 0x4B6F3D;
+            case "LT5" -> 0x4A5B3F;
+
+            case "RHT1" -> 0x1A2552;
+            case "RLT1" -> 0x3F1E60;
+            case "RHT2" -> 0x571E60;
+            case "RLT2" -> 0x5C2250;
+            */
+
             default -> 0xD3D3D3; // DEFAULT: pale grey
         };
     }

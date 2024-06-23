@@ -19,4 +19,8 @@ public enum GameMode implements TranslatableOption {
     private final int id;
     private final String translationKey;
     private final String apiKey;
+
+    public GameMode next() {
+        return values()[(ordinal() + 1) % values().length];
+    }
 }
